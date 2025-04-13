@@ -1,4 +1,4 @@
-oh-my-posh init pwsh --config 'C:\Users\User\Documents\PowerShell\clean-detailed.omp.json' | Invoke-Expression
+oh-my-posh init pwsh --config 'C:\Users\User\Documents\PowerShell\Scripts\clean-detailed.omp.json' | Invoke-Expression
 
 # Terminal icons
 Import-Module Terminal-Icons
