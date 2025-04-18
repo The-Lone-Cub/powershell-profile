@@ -1,24 +1,29 @@
-﻿while ((Get-Content "C:\path\to\your\file.txt").Count -le 100) {
-$uri = "https://geek-quote-api.vercel.app/v1/quote"
-$response = Invoke-WebRequest -Uri $uri
+﻿# Ensure the quotes file exists
+if (-not (Test-Path "$HOME\quotes.txt")) {
+    New-Item -Path "$HOME\quotes.txt" -ItemType File
+}
 
-$quote = $response.Content | ConvertFrom-Json
+while ((Get-Content "$HOME\quotes.txt").Count -lt 200) {
+    $uri = "https://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en"
+    $response = Invoke-WebRequest -Uri $uri
+    $quote = $response.Content | ConvertFrom-Json
+    $quote = $quote.quoteText + " ᚛ " + $quote.quoteAuthor
 
-$quote = $quote.quote + " ᚛ " + $quote.author
+    # Replace Unknown Author with Anonymous
+    if ($quote -match "᚛ Unknown Author") {
+        $quote = $quote -replace "᚛ Unknown Author", "᚛ Anonymous"
+    }
 
-# Check whether quote already exists in quotes.txt
-if (Test-Path "$HOME\quotes.txt") {
+    # Check if quote already exists in quotes.txt
     $quotes = Get-Content "$HOME\quotes.txt"
     if ($quotes -contains $quote) {
-        exit
+        continue  # Skip to the next iteration if quote already exists
     }
-}
 
-# Replace Unkown author with Anonymous
-if ($quote -match "᚛ Unknown Author") {
-    $quote = $quote -replace "᚛ Unknown Author", "᚛ Anonymous"
-}
+    # Append the new quote to quotes.txt
+    $quote | Out-File -FilePath "$HOME\quotes.txt" -Append
 
-# Append the quote to the quotes.txt file
-$quote | Out-File -FilePath "$HOME\quotes.txt" -Append
+    # Sleep for 1 second before the next request
+    Start-Sleep -Seconds 1
+    Write-Host "Added #$((Get-Content "$HOME\quotes.txt").Count): $quote`n"
 }
