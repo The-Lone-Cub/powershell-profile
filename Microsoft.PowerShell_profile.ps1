@@ -1,46 +1,62 @@
-﻿# PSReadLine
-Import-Module PSReadLine
-Import-Module Az.Tools.Predictor
-Import-Module -Name CompletionPredictor
+﻿$global:l_LoadFullProfile = $false
 
+Import-Module PSReadLine
 Set-PSReadLineOption -PredictionSource HistoryAndPlugin
 Set-PSReadLineOption -PredictionViewStyle ListView
 
-# Reload PowerShell with other theme and icons when needed
-function Reload-PowerShell {
-  oh-my-posh init pwsh --config 'C:\Users\User\Documents\PowerShell\Scripts\clean-detailed.omp.json' | Invoke-Expression
+# Define quotesPath at the root level
+$quotesPath = "$HOME\quotes.txt"
 
-  # Terminal icons
-  Import-Module Terminal-Icons
-
-  # Display a random quote on startup
-  Import-Module $HOME\Documents\PowerShell\Display-Quote.ps1
-  $quotesPath = "$HOME\quotes.txt"
-
-  function Clear-Host {
-    [Console]::Clear()
-    Show-Quote -quotesPath $quotesPath
+# Define Clear-Host at the profile root level with lazy loading
+function Clear-Host {
+  [Console]::Clear()
+  
+  if (($global:l_LoadFullProfile -eq $true) -and -not (Get-Command Show-Quote -ErrorAction SilentlyContinue)) {
+    . $HOME\Documents\PowerShell\Display-Quote.ps1
   }
 
-  Import-Module Az.Tools.Predictor
-  Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-
-  $isAdmin = ([Security.Principal.WindowsPrincipal] `
-      [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(`
-      [Security.Principal.WindowsBuiltInRole]::Administrator)
-
-  $symbol = if ($isAdmin) { "🛡️" } else { "👤" }
-
-  $host.ui.rawui.windowtitle = "$symbol The Lone Cub ⫷⫸"
-
-
-  Clear-Host
-  Write-Output ""
+  if($global:l_LoadFullProfile -and (Get-Command Show-Quote -ErrorAction SilentlyContinue)) {
+      Show-Quote -quotesPath $quotesPath
+  }
 }
 
-$l_LoadFullProfile = $false
+# Reload PowerShell with other theme and icons when needed
+function Reload-PowerShell {
+  $global:l_LoadFullProfile = $true
+  
+  # Consolidated module loading with minimal params
+  # Define the modules and their arguments as hashtables
+  # Define your modules with evaluated arguments
+  $modules = @(
+    "Az.Tools.Predictor -DisableNameChecking",
+    "CompletionPredictor -DisableNameChecking",
+    "Terminal-Icons"
+  )
+  # Import Modules
+  Import-Module Az.Tools.Predictor -DisableNameChecking
+  Import-Module CompletionPredictor -DisableNameChecking
+  Import-Module Terminal-Icons
 
-if ($l_LoadFullProfile) {
+  # Cache oh-my-posh config path
+  $ompConfig = 'C:\Users\User\Documents\PowerShell\Scripts\clean-detailed.omp.json'
+  oh-my-posh init pwsh --config $ompConfig | Invoke-Expression
+
+  # Consolidated admin check
+  $isAdmin = ( `
+          [Security.Principal.WindowsPrincipal] `
+          ([Security.Principal.WindowsIdentity]::GetCurrent()) `
+  ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+  $host.ui.rawui.windowtitle = "$(if ($isAdmin) {'🛡️'} else {'👤'}) The Lone Cub ⫷⫸"
+
+  Clear-Host
+}
+
+if ($global:l_LoadFullProfile) {
   . $PROFILE
   Reload-PowerShell
+}
+
+if($global:l_LoadFullProfile -eq $true) {
+  Write-Output ""
 }

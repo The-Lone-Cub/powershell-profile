@@ -1,4 +1,5 @@
-﻿$uri = "https://geek-quote-api.vercel.app/v1/quote"
+﻿while ((Get-Content "C:\path\to\your\file.txt").Count -le 100) {
+$uri = "https://geek-quote-api.vercel.app/v1/quote"
 $response = Invoke-WebRequest -Uri $uri
 
 $quote = $response.Content | ConvertFrom-Json
@@ -13,5 +14,11 @@ if (Test-Path "$HOME\quotes.txt") {
     }
 }
 
+# Replace Unkown author with Anonymous
+if ($quote -match "᚛ Unknown Author") {
+    $quote = $quote -replace "᚛ Unknown Author", "᚛ Anonymous"
+}
+
 # Append the quote to the quotes.txt file
 $quote | Out-File -FilePath "$HOME\quotes.txt" -Append
+}
