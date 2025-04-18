@@ -56,18 +56,18 @@
             $lines = $Text -split "`n"
             # Ensure $maxLen accounts for potential empty lines if $Text is empty
             $maxLen = if ($lines.Length -gt 0) { ($lines | Measure-Object -Property Length -Maximum).Maximum } else { 0 }
+            $chars = ''     # Accumulator for the border characters
             $result = @()
-            # Top border: Length = $maxLen + 2
-            $topBorderChars = '━' * ($maxLen)
-            $result += "┏$topBorderChars┓"
+            
+            # Top border:
+            $chars = '━' * ($maxLen)
+            $result += "┏$chars┓"
 
-            # Text lines: Length = 1 + text + padding + 1 + 1 = $maxLen + 3
             for ($i = 0; $i -lt $lines.Length; $i++) {
                 $paddingCount = $maxLen - $lines[$i].Length
-                # Ensure padding is not negative if a line somehow exceeds maxLen
                 if ($paddingCount -lt 0) { $paddingCount = 0 }
                 $padding = ' ' * $paddingCount
-                # Keep the trailing ║ as requested
+
                 if($i -eq 0) {
                     $result += "┃$($lines[$i])$padding┃═══╗"
                 } else {
@@ -75,24 +75,20 @@
                 }
             }
 
-            # Bottom border (initial): Should match text line length ($maxLen + 3)
-            $bottomBorderChars = '━' * ($maxLen)
-            $initialBottomBorder = "┗$bottomBorderChars┛▒▒▒║" # Add the trailing ║
-            $result += $initialBottomBorder # Add the quote's bottom border
+            # Bottom border:
+            $chars = '━' * ($maxLen)
+            $result += "┗$chars┛▒▒▒║"
 
-            # Author handling: Add the author line *after* the bottom border if author exists
+            # Author handling:
             $author = Get-Author -Text $FullQuote -Separator $Separator
             if ($author) {
-                # Calculate filler for author line to match total length ($maxLen + 3)
-                # Fixed parts: ' ╚═' (3 chars), Author (variable), '╝' (1 char) = $author.Length + 4 chars
-                $fillerCount = ($maxLen + 4) - ($author.Length + 4)
-                # Ensure filler is not negative
-                if ($fillerCount -lt 0) { $fillerCount = 0 }
-                $fillerChars = '▒' * $fillerCount
+                $charCount = $maxLen - $author.Length
+                if ($charCount -lt 0) { $charCount = 0 }
+                $chars = '▒' * $charCount
 
-                $shadow = '═' * ($maxLen)
-                $result += "   ║▒$author$fillerChars║"
-                $result += "   ╚═$shadow╝"
+                $result += "   ║▒$author$chars║"
+                $border = '═' * ($maxLen)
+                $result += "   ╚═$border╝"
             }
 
             return $result -join "`n"
@@ -123,6 +119,3 @@
         Write-Host $wrappedLines
     }
 }
-
-#██████╗
-#"                 ╚═══╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝ ╚═════╝
