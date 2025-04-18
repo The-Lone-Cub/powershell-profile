@@ -1,4 +1,4 @@
-$uri = "https://geek-quote-api.vercel.app/v1/quote"
+﻿$uri = "https://geek-quote-api.vercel.app/v1/quote"
 $response = Invoke-WebRequest -Uri $uri
 
 $quote = $response.Content | ConvertFrom-Json

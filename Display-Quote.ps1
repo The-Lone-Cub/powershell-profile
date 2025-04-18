@@ -1,4 +1,4 @@
-function Show-Quote {
+﻿function Show-Quote {
     param (
         $quotesPath,
         [string]$QuoteSeparator = '᚛'
@@ -17,7 +17,7 @@ function Show-Quote {
             # Extract just the quote part (before the author)
             $quoteOnly = $Text
             $separatorIndex = $Text.IndexOf($Separator)
-            
+
             # If separator exists, split the quote and author
             if ($separatorIndex -gt 0) {
                 $quoteOnly = $Text.Substring(0, $separatorIndex).Trim()
@@ -52,27 +52,27 @@ function Show-Quote {
                 [string]$FullQuote,
                 [string]$Separator = $QuoteSeparator  # Pass the separator down
             )
-        
+
             $lines = $Text -split "`n"
             $maxLen = ($lines | Measure-Object -Property Length -Maximum).Maximum
             $result = @()
             $chars = '━' * ($maxLen)
             $result += "┏$chars┓"
-        
+
             foreach ($line in $lines) {
                 $padding = ' ' * ($maxLen - $line.Length)
                 $result += "┃$line$padding┃░"
             }
-        
+
             $result += "┗$chars┛░"
             # Use the full quote for extracting author
             $author = Get-Author -Text $FullQuote -Separator $Separator
-            
+
             if ($author) {
                 $chars = '░' * ($maxLen - $author.Length + 1)
                 $result += " ░$author$chars"
             }
-        
+
             return $result -join "`n"
         }
 
@@ -84,14 +84,14 @@ function Show-Quote {
 
             # Find the position of the separator character
             $separatorIndex = $Text.IndexOf($Separator)
-            
+
             if ($separatorIndex -eq -1 || $separatorIndex -ge $Text.Length - 1) {
                 return $null  # No author found or separator at the end
             }
 
             # Extract everything after the separator and trim whitespace
             $author = $Text.Substring($separatorIndex + 1).Trim()
-            
+
             # Clean up any newlines or extra whitespace
             return ($author -replace '\s+', ' ')
         }
