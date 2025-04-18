@@ -5,14 +5,14 @@ Set-PSReadLineOption -PredictionSource HistoryAndPlugin
 Set-PSReadLineOption -PredictionViewStyle ListView
 
 # Define quotesPath at the root level
-$quotesPath = "$HOME\quotes.txt"
+$quotesPath = "$HOME\Documents\PowerShell\Quotes\quotes.txt"
 
 # Define Clear-Host at the profile root level with lazy loading
 function Clear-Host {
   [Console]::Clear()
   
   if (($global:l_LoadFullProfile -eq $true) -and -not (Get-Command Show-Quote -ErrorAction SilentlyContinue)) {
-    . $HOME\Documents\PowerShell\Display-Quote.ps1
+    . $HOME\Documents\PowerShell\Quotes\Display-Quote.ps1
   }
 
   if($global:l_LoadFullProfile -and (Get-Command Show-Quote -ErrorAction SilentlyContinue)) {
@@ -24,21 +24,14 @@ function Clear-Host {
 function Reload-PowerShell {
   $global:l_LoadFullProfile = $true
   
-  # Consolidated module loading with minimal params
-  # Define the modules and their arguments as hashtables
-  # Define your modules with evaluated arguments
-  $modules = @(
-    "Az.Tools.Predictor -DisableNameChecking",
-    "CompletionPredictor -DisableNameChecking",
-    "Terminal-Icons"
-  )
   # Import Modules
   Import-Module Az.Tools.Predictor -DisableNameChecking
   Import-Module CompletionPredictor -DisableNameChecking
   Import-Module Terminal-Icons
 
   # Cache oh-my-posh config path
-  $ompConfig = 'C:\Users\User\Documents\PowerShell\Scripts\clean-detailed.omp.json'
+  $ompName = 'clean-detailed'
+  $ompConfig = "C:\Users\User\Documents\PowerShell\Scripts\$ompName.omp.json"
   oh-my-posh init pwsh --config $ompConfig | Invoke-Expression
 
   # Consolidated admin check
@@ -57,6 +50,6 @@ if ($global:l_LoadFullProfile) {
   Reload-PowerShell
 }
 
-if($global:l_LoadFullProfile -eq $true) {
-  Write-Output ""
+if($global:l_LoadFullProfile) {
+  Write-Output "" # Synchronise clear behaviour with that of profile loading
 }
